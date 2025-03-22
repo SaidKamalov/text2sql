@@ -1,8 +1,9 @@
-from typing import override
 from data_models import Sample, SpiderSample
 from utils import load_data, SpiderUtils
 from tqdm import tqdm
 import os
+
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
 
 class Dataset:
@@ -45,15 +46,9 @@ class SpiderDataset(Dataset):
         self.is_test = is_test
         self.dbs_info = self._get_dbs_info()
 
-        self.samples = []
-        for raw_sample in tqdm(self._raw_samples, desc="Processing samples"):
-            self.samples.append(
-                SpiderSample(
-                    raw_sample | {"db_info": self.dbs_info.get(raw_sample["db_id"], {})}
-                )
-            )
+        self.samples = self._get_samples()
 
-    @override
+    # override _get_dbs_info
     def _get_dbs_info(self, db_path: str = "database"):
         if not self._table_file_path:
             return super()._get_dbs_info(db_path)
@@ -64,7 +59,8 @@ class SpiderDataset(Dataset):
     def _get_samples(self):
         samples = []
         gold_raw = SpiderUtils.get_gold_queries(
-            os.path.join(self._dataset_dir, self._path_to_gold)
+            os.path.join(PROJECT_ROOT, "data", self._dataset_dir, self._path_to_gold),
+            self.is_test,
         )
 
         for raw_sample, gold_q in tqdm(
@@ -80,11 +76,17 @@ class SpiderDataset(Dataset):
 
         return samples
 
-    # def _get_gold_querries(self):
-    #     pass
-
 
 if __name__ == "__main__":
+    print(PROJECT_ROOT)
     # Test Dataset
-    dataset = SpiderDataset("spider_data", "train_spider.json")
+    dataset = SpiderDataset(
+        "spider_data",
+        "dev.json",
+        "dev_gold.sql",
+        table_file_path="tables.json",
+        is_test=True,
+    )
     print(dataset.samples[0].question)
+    print(dataset.samples[0].query)
+    print(dataset.samples[0].query_gold)
