@@ -1,9 +1,11 @@
 import json
 import os
 
+PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+
 
 def load_data(dataset_dir: str, file_name: str) -> list[dict]:
-    file_path = os.path.join(os.getcwd(), "data", dataset_dir, file_name)
+    file_path = os.path.join(PROJECT_ROOT, "data", dataset_dir, file_name)
     try:
         with open(file_path, "r") as f:
             data = json.load(f)
@@ -125,8 +127,7 @@ class SpiderUtils:
 
 
 if __name__ == "__main__":
+    print(PROJECT_ROOT)
     # Test load_data
-    data = load_data("spider_data", "train_spider.json")
-    print(data[0])
-
-    #
+    # data = load_data("spider_data", "train_spider.json")
+    # print(data[0])
