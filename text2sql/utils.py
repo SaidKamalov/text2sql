@@ -87,7 +87,7 @@ class SpiderUtils:
         return schema_dict
 
     @staticmethod
-    def get_gold_queries(file_path: str, is_test: bool = False) -> list[list[str]]:
+    def get_gold_queries(file_path: str) -> list[list[str]]:
         """Extract SQL queries from Spider gold SQL files.
 
         Args:
@@ -98,7 +98,6 @@ class SpiderUtils:
             List of lists of SQL queries. Inner lists contain either 1 or 2 queries depending on is_test.
         """
         queries = []
-        current_queries = []
 
         with open(file_path, "r") as f:
             for line_number, line in enumerate(f, 1):  # Start counting from 1
@@ -110,18 +109,7 @@ class SpiderUtils:
                         )
 
                     query = parts[0]
-                    current_queries.append(query)
-
-                    if not is_test:
-                        queries.append([query])
-                        current_queries = []
-                    elif len(current_queries) == 2:
-                        queries.append(current_queries)
-                        current_queries = []
-
-        # Handle any remaining queries
-        if current_queries and is_test:
-            queries.append(current_queries)
+                    queries.append(query)
 
         return queries
 

@@ -37,13 +37,11 @@ class SpiderDataset(Dataset):
         dataset_dir: str,
         file_name: str,
         path_to_gold: str,
-        is_test: bool = False,
         table_file_path: str = None,
     ):
         super().__init__(dataset_dir, file_name)
         self._table_file_path = table_file_path
         self._path_to_gold = path_to_gold
-        self.is_test = is_test
         self.dbs_info = self._get_dbs_info()
 
         self.samples = self._get_samples()
@@ -59,8 +57,7 @@ class SpiderDataset(Dataset):
     def _get_samples(self):
         samples = []
         gold_raw = SpiderUtils.get_gold_queries(
-            os.path.join(PROJECT_ROOT, "data", self._dataset_dir, self._path_to_gold),
-            self.is_test,
+            os.path.join(PROJECT_ROOT, "data", self._dataset_dir, self._path_to_gold)
         )
 
         for raw_sample, gold_q in tqdm(
@@ -85,7 +82,6 @@ if __name__ == "__main__":
         "dev.json",
         "dev_gold.sql",
         table_file_path="tables.json",
-        is_test=True,
     )
     print(dataset.samples[0].question)
     print(dataset.samples[0].query)
