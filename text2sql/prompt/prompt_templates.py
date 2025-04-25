@@ -1,4 +1,6 @@
 from text2sql.data_models import Sample
+from text2sql.get_examples import select_k_shot_examples
+from text2sql.enums import ExampleSelectionType
 
 
 class OAIPrompt:
@@ -7,8 +9,8 @@ class OAIPrompt:
     def build_prompt(
         sample: Sample,
         k: int,
-        examples_repr_type=None,
-        examples_seletion_method=None,
+        examples: list[Sample] = None,
+        example_selection_type: ExampleSelectionType = None,
         schema_info_option=None,
         add_fk_info: bool = False,
         add_cv_ref: bool = False,
@@ -29,12 +31,20 @@ class OAIPrompt:
             fk_info = OAIPrompt._fk_info_prep(sample.db_info)
             prompt_message += fk_info
 
-        if k > 0:
-            pass
+        if k > 0 and examples:
+            example_message = ""
+            examples = select_k_shot_examples(
+                sample, k, examples, example_selection_type
+            )
+            example_message += "### Examples:\n"
+            for ex in examples:
+                example_message += f"# Question: {ex.question}\n"
+                example_message += f"# Answer: {ex.query}\n#\n"
         else:
-            pass
+            example_message = ""
+        prompt_message += example_message
 
-        question = "### " + sample.question + "\nSELECT"
+        question = "### Question: " + sample.question + "\n### Answer: SELECT"
         prompt_message += question
 
         return prompt_message
@@ -73,8 +83,8 @@ class ReasoningPrompt:
     def build_prompt(
         sample: Sample,
         k: int,
-        examples_repr_type=None,
-        examples_seletion_method=None,
+        examples: list[Sample],
+        example_selection_type: ExampleSelectionType = None,
         schema_info_option=None,
         add_fk_info: bool = False,
         add_cv_ref: bool = False,
@@ -124,6 +134,19 @@ class ReasoningPrompt:
 
         if schema_info_option or add_fk_info:
             prompt_message += context
+
+        if k > 0 and examples:
+            example_message = ""
+            examples = select_k_shot_examples(
+                sample, k, examples, example_selection_type
+            )
+            example_message += "## Examples:\n"
+            for ex in examples:
+                example_message += f"**Question:** {ex.question}\n"
+                example_message += f"**Answer:** {ex.query}\n\n"
+        else:
+            example_message = ""
+        prompt_message += example_message
 
         prompt_message += f"\n**Question:** {sample.question}\n**Answer:** SELECT"
 
