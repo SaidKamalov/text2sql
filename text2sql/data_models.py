@@ -12,6 +12,7 @@ class SpiderSample(Sample):
 
     # Question related fields
     question_toks: list
+    question_embedding: list
 
     # DB related fields
     db_info: dict
@@ -31,6 +32,7 @@ class SpiderSample(Sample):
         try:
             self.db_id = raw_sample["db_id"]
             self.question = raw_sample["question"]
+            self.question_embedding = None
             self.query = raw_sample["query"]
         except KeyError as e:
             raise ValueError(

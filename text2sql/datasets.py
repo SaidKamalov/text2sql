@@ -2,6 +2,8 @@ from data_models import Sample, SpiderSample
 from utils import load_data, SpiderUtils
 from tqdm import tqdm
 import os
+import torch
+from sentence_transformers import SentenceTransformer
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -72,6 +74,20 @@ class SpiderDataset(Dataset):
             )
 
         return samples
+
+    def calculate_question_embeddings(self, model: str):
+        device = "cpu"
+        # Auto-select device: MPS (Apple Silicon), CUDA, or CPU
+        if torch.backends.mps.is_available():
+            device = "mps"
+        elif torch.cuda.is_available():
+            device = "cuda"
+        else:
+            device = "cpu"
+
+        model = SentenceTransformer(model_name_or_path=model, device=device)
+        for sample in tqdm(self.samples, desc="Calculating question embeddings"):
+            sample.question_embedding = model.encode(sample.question)
 
 
 if __name__ == "__main__":

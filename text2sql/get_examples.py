@@ -5,13 +5,13 @@ import random
 from data_models import Sample
 from enums import ExampleSelectionType
 from utils import HardnessEvaluator
+import torch
+import numpy as np
 
 
 def _select_k_shot_examples_question_cosine_sim(
     target_sample: Sample, k: int, possible_examples: list[Sample]
 ) -> list:
-    # TODO:
-    # - change file_path to samples
     """
     Select k most similar examples to the given sample from set of samples, based on cosine similarity of questions using sentence embeddings.
     Args:
@@ -22,17 +22,11 @@ def _select_k_shot_examples_question_cosine_sim(
         List of k Sample objects with most similar question.
     """
 
-    # Extract all questions
-    questions = [ex.question for ex in possible_examples]
-    # Add the input sample's question at the end
-    all_questions = questions + [target_sample.question]
-
-    # Load sentence transformer model
-    model = SentenceTransformer("all-MiniLM-L6-v2")
-    embeddings = model.encode(all_questions)
-
     # Compute cosine similarity between sample and all examples
-    sim_scores = cosine_similarity([embeddings[-1]], embeddings[:-1]).flatten()
+    sim_scores = cosine_similarity(
+        np.array(target_sample.question_embedding).reshape(1, -1),
+        [ex.question_embedding for ex in possible_examples],
+    ).flatten()
 
     # Get indices of top-k most similar examples
     top_k_idx = sim_scores.argsort()[-k:][::-1]
@@ -119,17 +113,17 @@ def select_k_shot_examples(
     possible_examples: list[Sample],
     selection_type: ExampleSelectionType,
 ) -> list:
-    if selection_type == ExampleSelectionType.COSINE_SIM:
+    if selection_type.value == ExampleSelectionType.COSINE_SIM.value:
         return _select_k_shot_examples_question_cosine_sim(
             target_sample, k, possible_examples
         )
-    elif selection_type == ExampleSelectionType.RANDOM:
+    elif selection_type.value == ExampleSelectionType.RANDOM.value:
         return _select_k_random_examples(k, possible_examples)
-    elif selection_type == ExampleSelectionType.RAND_HARDNESS:
+    elif selection_type.value == ExampleSelectionType.RAND_HARDNESS.value:
         return _select_k_random_examples_by_hardness(
             target_sample, k, possible_examples
         )
-    elif selection_type == ExampleSelectionType.COSINE_SIM_HARDNESS:
+    elif selection_type.value == ExampleSelectionType.COSINE_SIM_HARDNESS.value:
         return _select_k_shot_examples_question_cosine_sim_same_hardness(
             target_sample, k, possible_examples
         )
