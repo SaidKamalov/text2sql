@@ -28,3 +28,12 @@ class PromptRepresentationType(Enum):
 
     OAI = "openai"
     REASONING = "reasoning"
+
+
+class InferenceOptions(Enum):
+    """
+    Enum class for inference options.
+    """
+
+    SQL_UNI = "gpt-4.1-2025-04-14"
+    SQL_REASON = "o4-mini-2025-04-16"
