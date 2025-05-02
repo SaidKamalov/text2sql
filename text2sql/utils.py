@@ -1,5 +1,6 @@
 import json
 import os
+import re
 
 PROJECT_ROOT = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 
@@ -55,14 +56,17 @@ class SpiderUtils:
             schema_dict[db_id] = []
 
             # Process each table in the database
-            for idx, table in enumerate(db["table_names"]):
+            for idx, table in enumerate(db["table_names_original"]):
+                table = table.lower()
                 table_dict = {table: []}
 
                 # Process columns for this table
-                for col_idx, (table_id, col_name) in enumerate(db["column_names"]):
+                for col_idx, (table_id, col_name) in enumerate(
+                    db["column_names_original"]
+                ):
                     if table_id == idx:  # Column belongs to current table
                         col_info = {
-                            "name": col_name,
+                            "name": col_name.lower(),
                             "type": db["column_types"][col_idx],
                             "primary": col_idx in db["primary_keys"],
                             "foreign": None,
@@ -71,9 +75,9 @@ class SpiderUtils:
                         # Check if column is a foreign key
                         for fk_pair in db["foreign_keys"]:
                             if col_idx == fk_pair[0]:
-                                ref_col = db["column_names"][fk_pair[1]][1]
-                                ref_table = db["table_names"][
-                                    db["column_names"][fk_pair[1]][0]
+                                ref_col = db["column_names_original"][fk_pair[1]][1]
+                                ref_table = db["table_names_original"][
+                                    db["column_names_original"][fk_pair[1]][0]
                                 ]
                                 col_info["foreign"] = f"{ref_table}.{ref_col}"
 
@@ -227,6 +231,17 @@ class HardnessEvaluator:
             return "hard"
         else:
             return "extra"
+
+
+def post_process_sql(sql: str) -> str:
+    sql = sql.replace("> =", ">=").replace("< =", "<=").replace("! =", "!=")
+    sql = re.sub(r"^(SELECT\s+)+", "SELECT ", sql, flags=re.IGNORECASE)
+    sql = re.sub(
+        "YEAR\s*\(\s*CURDATE\s*\(\s*\)\s*\)\s*", "2020", sql, flags=re.IGNORECASE
+    )
+    sql = re.sub(r"\s+", " ", sql)
+    sql = sql.strip().rstrip(";")
+    return sql
 
 
 if __name__ == "__main__":

@@ -103,7 +103,6 @@ class ReasoningPrompt:
         return_format = (
             "## Return Format:\n"
             "Write SQLite query only and with no explanation or comments.\n"
-            "Do not use any aliases for tables or columns.\n"
             "Return only SQLite query in a format: SELECT ...\n\n"
         )
 
