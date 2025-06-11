@@ -105,3 +105,14 @@ def create_batch(file_id, description: str):
         },
     )
     return batch
+
+
+def get_batch_status(batch_id: str):
+    batch = CLIENT.batches.retrieve(batch_id)
+    return batch
+
+
+def download_batch_results(output_file_id: str, output_file: str):
+    batch_content = CLIENT.files.content(output_file_id)
+    batch_content.write_to_file(f"./pipeline_results/{output_file}.jsonl")
+    print(f"Batch results downloaded to {output_file}")

@@ -79,7 +79,7 @@ class SpiderUtils:
                                 ref_table = db["table_names_original"][
                                     db["column_names_original"][fk_pair[1]][0]
                                 ]
-                                col_info["foreign"] = f"{ref_table}.{ref_col}"
+                                col_info["foreign"] = f"{ref_table}.{ref_col}".lower()
 
                         table_dict[table].append(col_info)
 
@@ -241,6 +241,33 @@ def post_process_sql(sql: str) -> str:
     )
     sql = re.sub(r"\s+", " ", sql)
     sql = sql.strip().rstrip(";")
+    return sql
+
+
+def post_process_responce_string(responce: str) -> str:
+    """
+    Post-process the response string to remove unwanted characters and format it.
+    Args:
+        responce: The response string to be processed.
+    Returns:
+        The cleaned and formatted response string.
+    """
+    processed_responce = responce.strip()
+    if not processed_responce.startswith("{"):
+        processed_responce = "{" + processed_responce
+
+    if not processed_responce.endswith("}"):
+        processed_responce = processed_responce + "}"
+
+    try:
+        d = json.loads(processed_responce)
+    except Exception:
+        d = {}
+
+    sql = d.get("sql_query", "SELECT")
+
+    if not sql.startswith("SELECT"):
+        sql = "SELECT"
     return sql
 
 
